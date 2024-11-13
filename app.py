@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import pandas as pd
+import sqlite3
 
 def fetch_page():
     url = "https://www.mercadolivre.com.br/apple-iphone-16-pro-256-gb-titnio-deserto-distribuidor-autorizado/p/MLB1040287840#polycard_client=search-nordic&wid=MLB3846027829&sid=search&searchVariation=MLB1040287840&position=3&search_layout=stack&type=product&tracking_id=c53122b0-4d92-48b3-93de-e1afccc1f2e4"
@@ -17,6 +18,7 @@ def parse_page(html):
     installment_price : int = int(product_price[2].get_text().replace('.', ''))
 
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+
     return {
         "product_name": product_name,
         "old_price": old_price,
@@ -25,19 +27,40 @@ def parse_page(html):
         "timestamp": timestamp
     }
 
-def save_to_dataframe(product_info, df):
+def create_connection(db_name='Iphone_prices.db'):
+    """Cria um conexão com o banco de dados SQLite"""
+    conn = sqlite3.connect(db_name)
+    return conn
+
+def setup_database(conn):
+    """Cria a tabela de preços se ela não existir"""
+    cursor = conn.cursor()
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS prices(
+        id  INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_name TEXT NOT NULL,
+        old_price INTEGER,
+        new_price INTEGER,
+        installment_price INTEGER,
+        timestamp TEXT NOT NULL
+    )
+''')
+    conn.commit()
+
+def save_to_database(conn, product_info):
     new_row = pd.DataFrame([product_info])
-    df = pd.concat([df, new_row], ignore_index=True)
-    return df
+    new_row.to_sql('prices', conn, if_exists='append', index=False)
 
 if __name__ == "__main__":
 
-    df = pd.DataFrame()
+    conn = create_connection()
+    setup_database(conn)
 
     while True:
         page_content = fetch_page()
         product_info = parse_page(page_content)
-        df = save_to_dataframe(product_info, df)
-        print(product_info)
+        save_to_database(conn, product_info)
+        print("Dados salvos no banco de dados:  ", product_info)
+
         time.sleep(10)
 
