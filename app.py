@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+import time
 
 def fetch_page():
     url = "https://www.mercadolivre.com.br/apple-iphone-16-pro-256-gb-titnio-deserto-distribuidor-autorizado/p/MLB1040287840#polycard_client=search-nordic&wid=MLB3846027829&sid=search&searchVariation=MLB1040287840&position=3&search_layout=stack&type=product&tracking_id=c53122b0-4d92-48b3-93de-e1afccc1f2e4"
@@ -22,7 +23,9 @@ def parse_page(html):
     }
 
 if __name__ == "__main__":
-    page_content = fetch_page()
-    product_info = parse_page(page_content)
-    print(product_info)
+    while True:
+        page_content = fetch_page()
+        product_info = parse_page(page_content)
+        print(product_info)
+        time.sleep(10)
 
