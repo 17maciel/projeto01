@@ -5,7 +5,7 @@ import pandas as pd
 import sqlite3
 
 def fetch_page():
-    url = "https://www.mercadolivre.com.br/apple-iphone-16-pro-256-gb-titnio-deserto-distribuidor-autorizado/p/MLB1040287840#polycard_client=search-nordic&wid=MLB3846027829&sid=search&searchVariation=MLB1040287840&position=3&search_layout=stack&type=product&tracking_id=c53122b0-4d92-48b3-93de-e1afccc1f2e4"
+    url = "https://www.mercadolivre.com.br/fritadeira-sem-oleo-air-fryer-6l-mondial-afn-60-bi-1900w-pretoinox/p/MLB25401959?pdp_filters=item_id:MLB3411318187#wid=MLB3411318187&sid=search&is_advertising=true&searchVariation=MLB25401959&position=1&search_layout=stack&type=pad&tracking_id=5ea6e707-d1ab-4484-8f73-814f8184abe5&is_advertising=true&ad_domain=VQCATCORE_LST&ad_position=1&ad_click_id=MDgyN2Y5OWEtZDYzNS00YzU3LTk0NzEtYzM0NTY4MDQ0ZmI1"
     response = requests.get(url)
     return response.text
 
@@ -65,17 +65,18 @@ if __name__ == "__main__":
     while True:
         page_content = fetch_page()
         product_info = parse_page(page_content)
+        current_price = product_info["new_price"]
 
         max_price, max_timestamp = get_max_price(conn)
 
-        current_price = product_info["new_price"]
+        max_price_timestamp = None
                                      
         if current_price > max_price:
             print("Preço maior detectado")
             max_price = current_price
             max_price_timestamp = product_info['timestamp']
         else:
-            print("O preço máximo registrado é o antigo")
+            print("O preço máximo registrado é {max_price}")
                                     
         save_to_database(conn, product_info)
         print("Dados salvos no banco de dados:  ", product_info)
